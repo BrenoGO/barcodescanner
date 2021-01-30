@@ -3,6 +3,7 @@ import { Text, Keyboard, ScrollView, StyleSheet, AsyncStorage, Alert, TextInput,
 
 export default function FieldScreen() {
   const [code, setCode] = useState('');
+  const [loading, setLoading] = useState('');
 
   function codeToSixDigits() {
     let newCode = code;
@@ -32,6 +33,7 @@ export default function FieldScreen() {
   }
 
   async function saveStorage(fixedCode) {
+    setLoading(true);
     try{
       const estoque = await AsyncStorage.getItem('estoque');
       if(estoque === null){
@@ -39,11 +41,12 @@ export default function FieldScreen() {
         await AsyncStorage.setItem('estoque', `${fixedCode}\n`);
         Keyboard.dismiss();
         setCode('');
+        setLoading(false);
       } else{
         const novoEstoque = `${estoque}${fixedCode}\n`
-        console.log('novo estoque:', novoEstoque);
         await AsyncStorage.setItem('estoque', novoEstoque);
         setCode('');
+        setLoading(false);
       }
     }catch(err){
       console.log('ERRORRRR:', err)

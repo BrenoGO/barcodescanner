@@ -1,16 +1,10 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import {
-  Image,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
-
-import { MonoText } from '../components/StyledText';
 
 export default function HomeScreen() {
   return (
@@ -20,7 +14,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.welcomeContainer}>
-          <Text style={styles.title}>Barcode Storage App</Text>
+          <Text style={styles.title}>iCode Collector</Text>
         </View>
       </ScrollView>
 

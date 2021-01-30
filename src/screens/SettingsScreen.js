@@ -1,43 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, StyleSheet, Alert, View } from 'react-native';
+import { Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, StyleSheet, Alert, View, ActivityIndicator } from 'react-native';
+import { codeToSixDigits } from '../helpers';
 import api from '../services/api';
+import { withNavigationFocus } from 'react-navigation';
+import Layout from '../constants/Layout';
 
-export default function SettingsScreen() {
+function SettingsScreen({ isFocused }) {
   const [lastAltered, setLastAltered] = useState('');
   const [changed, setChanged] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getEstoque();
-  }, []);
+    if (isFocused === true) {
+      getEstoque();
+    }
+  }, [isFocused]);
 
   async function getEstoque() {
+    setLoading(true);
     const estoque = await AsyncStorage.getItem('estoque');
-    console.log('estoque:', estoque);
     if(estoque) {
       const [last] = estoque.split('\n').slice(-2, -1);
       setLastAltered(last);
       setChanged(last);
     }
+    setLoading(false);
     return estoque;
   }
 
   async function clearEstoque() {
+    setLoading(true);
     await AsyncStorage.removeItem('estoque');
     setChanged('');
     setLastAltered('');
-  }
-
-  function codeToSixDigits() {
-    let newCode = changed;
-    while(newCode.length < 6) {
-      newCode = `0${newCode}`;
-    }
-    setChanged(newCode);
-    return newCode;
+    setLoading(false);
   }
 
   function handleSaveButton() {  
-    const fixedCode = codeToSixDigits();
+    const fixedCode = codeToSixDigits(changed);
     if(Alert.alert(
       `Confirmação`,
       `Alterando para o código: ${fixedCode}`,
@@ -58,7 +58,7 @@ export default function SettingsScreen() {
       ]
     ));
   }
-  function handleSendToServerButton() {  
+  function handleSendToServerButton() {
     if(Alert.alert(
       `Confirmação`,
       `Tem certeza que deseja enviar estoque pro servidor?`,
@@ -80,43 +80,55 @@ export default function SettingsScreen() {
   }
 
   async function saveStorage(fixedCode) {
+    setLoading(true);
     try{
       const estoque = await AsyncStorage.getItem('estoque');
       const arrEstoque = estoque.split('\n');
       arrEstoque[arrEstoque.length - 2] = fixedCode;
       const novoEstoque = arrEstoque.join('\n');
-      console.log('novo estoque:', novoEstoque);
       await AsyncStorage.setItem('estoque', novoEstoque);
       setLastAltered(fixedCode);
+      setLoading(false);
     }catch(err){
-      console.log('ERRORRRR:', err)
+      setLoading(false);
+      Alert.alert(
+        'Erro tentando salvar!',
+        err.message,
+      )
     }
   }
 
   async function removeLastItem() {
+    setLoading(true);
     try{
       const estoque = await AsyncStorage.getItem('estoque');
       const arrEstoque = estoque.split('\n');
       setLastAltered(arrEstoque[arrEstoque.length - 3]);
       setChanged(arrEstoque[arrEstoque.length - 3]);
       const novoEstoque = arrEstoque.slice(0, -2).join('\n');
-      console.log('novoEstoque');
-      console.log(novoEstoque);
       await AsyncStorage.setItem('estoque', `${novoEstoque}\n`);
+      setLoading(false);
     }catch(err){
-      console.log('ERROR trying remove last item:', err)
+      Alert.alert(
+        'Erro tentando remover último ítem!',
+        err.message,
+      )
+      setLoading(false);
     }
   }
 
   async function sendToServer() {
+    setLoading(true);
     try{
-      console.log('in sendToServer!')
       const estoque = await AsyncStorage.getItem('estoque');
-      console.log('estoque', estoque);
-      const response = await api.post('/sendData', {estoque});
-      console.log('response', response);
+      const project = await AsyncStorage.getItem('project');
+      const user = await AsyncStorage.getItem('user');
+      const response = await api.post('save', {
+        estoque,
+        project,
+        user
+      });
       if (response.status === 200) {
-        console.log('tudo ok!');
         Alert.alert(
           'OK!',
           'Estoque salvo no servidor',
@@ -124,15 +136,30 @@ export default function SettingsScreen() {
             {text: 'ok', onPress: () => clearEstoque()}
           ]
         )
-      } 
+      } else {
+        throw Error('Erro ao salvar estoque no servidor')
+      }
+      setLoading(false);
     } catch (err) {
-      console.log('Error trying to send estoque: ', err);
+      console.log('err.......')
+      console.log(err);
+      setLoading(false);
+      Alert.alert(
+        'Erro!',
+        'Estoque NÃO foi salvo no servidor',
+      )
     }
   }
 
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large"/>
+      </View>
+    )
+  }
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={getEstoque} style={styles.buttons}><Text style={styles.textButton}>Verificar último código inserido</Text></TouchableOpacity>
       <View style={{alignItems: 'center'}}>
         <Text>Último código: </Text>
         <TextInput style={styles.lastCodesTI} keyboardType="numeric" value={changed} maxLength={6} onChangeText={(text) => setChanged(text)}/>
@@ -149,9 +176,7 @@ export default function SettingsScreen() {
   );
 }
 
-SettingsScreen.navigationOptions = {
-  title: 'app.json',
-};
+export default withNavigationFocus(SettingsScreen);
 
 const styles = StyleSheet.create({
   container: {
@@ -176,5 +201,11 @@ const styles = StyleSheet.create({
   },
   textButton : {
     color: 'blue',
+  },
+  loading: {
+    flex: 1,
+    height: Layout.window.height,
+    justifyContent: "center",
   }
 })
+

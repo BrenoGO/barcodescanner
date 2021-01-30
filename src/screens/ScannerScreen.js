@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button, AsyncStorage, Alert } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
+import { codeToSixDigits } from '../helpers';
 
 
 export default function ScannerScreen() {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -14,12 +16,6 @@ export default function ScannerScreen() {
     })();
   }, []);
 
-  function codeToSixDigits(code) {
-    while(code.length < 6) {
-      code = `0${code}`;
-    }
-    return code;
-  }
   async function saveStorage(code) {
     code = codeToSixDigits(code);
     try{
@@ -30,7 +26,6 @@ export default function ScannerScreen() {
         await AsyncStorage.setItem('estoque', `${code}\n`);
       } else{
         const novoEstoque = `${estoque}${code}\n`
-        console.log('novo estoque:', novoEstoque);
         await AsyncStorage.setItem('estoque', novoEstoque);
       }
     }catch(err){
