@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Text, ScrollView, AsyncStorage, TouchableOpacity, TextInput, StyleSheet, Alert, View, ActivityIndicator } from 'react-native';
 import { codeToSixDigits } from '../helpers';
 import api from '../services/api';
-import { withNavigationFocus } from 'react-navigation';
+import { useIsFocused } from '@react-navigation/native';
 import Layout from '../constants/Layout';
 
-function SettingsScreen({ isFocused }) {
+function SettingsScreen() {
   const [lastAltered, setLastAltered] = useState('');
   const [changed, setChanged] = useState('');
   const [loading, setLoading] = useState(false);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     if (isFocused === true) {
@@ -21,6 +22,7 @@ function SettingsScreen({ isFocused }) {
     const estoque = await AsyncStorage.getItem('estoque');
     if(estoque) {
       const [last] = estoque.split('\n').slice(-2, -1);
+      console.log(last);
       setLastAltered(last);
       setChanged(last);
     }
@@ -176,7 +178,7 @@ function SettingsScreen({ isFocused }) {
   );
 }
 
-export default withNavigationFocus(SettingsScreen);
+export default SettingsScreen;
 
 const styles = StyleSheet.create({
   container: {

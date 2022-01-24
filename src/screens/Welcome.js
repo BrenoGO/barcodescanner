@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Text, StyleSheet, AsyncStorage, KeyboardAvoidingView } from 'react-native';
-import { TextInput, TouchableOpacity, ScrollView } from 'react-native-gesture-handler';
+import { Text, StyleSheet, AsyncStorage, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { TextInput, ScrollView } from 'react-native-gesture-handler';
 
 export default function Welcome({ navigation }) {
   Welcome.navigationOptions = {

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Platform } from 'react-native';
-import { createStackNavigator } from 'react-navigation-stack';
-import { createBottomTabNavigator } from 'react-navigation-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/HomeScreen';
@@ -9,11 +8,74 @@ import ScannerScreen from '../screens/ScannerScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import FieldScreen from '../screens/FieldScreen';
 
-const config = Platform.select({
-  web: { headerMode: 'screen' },
-  default: {},
-});
+const Tab = createBottomTabNavigator();
 
+export default function MainTabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          if (route.name === 'Início') {
+            return <TabBarIcon
+              focused={focused}
+              name={
+                Platform.OS === 'ios'
+                  ? `ios-information-circle${focused ? '' : '-outline'}`
+                  : 'md-information-circle'
+              }
+            />
+          }
+          if (route.name === 'Leitor') {
+            return <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'} />
+          }
+          if (route.name === 'Digitar') {
+            return <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'} />
+          }
+          if (route.name === 'Configuração') {
+            return <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-options' : 'md-options'} />
+          }
+        },
+        // tabBarActiveTintColor: 'tomato',
+        // tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen
+        component={HomeScreen}
+        name="Início"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        component={ScannerScreen}
+        name="Leitor"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        component={FieldScreen}
+        name="Digitar"
+        tabBarIcon={({ focused }) => (
+          <TabBarIcon focused={focused} name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'} />
+        )}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        component={SettingsScreen}
+        name="Configuração"
+        options={{
+          headerShown: false,
+        }}
+      />
+      
+    </Tab.Navigator>
+  )
+}
+
+/*
 const HomeStack = createStackNavigator(
   {
     Home: HomeScreen,
@@ -95,3 +157,4 @@ const tabNavigator = createBottomTabNavigator({
 tabNavigator.path = '';
 
 export default tabNavigator;
+*/

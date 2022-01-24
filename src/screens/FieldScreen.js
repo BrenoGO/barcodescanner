@@ -3,6 +3,7 @@ import { Text, Keyboard, ScrollView, StyleSheet, AsyncStorage, Alert, TextInput,
 
 export default function FieldScreen() {
   const [code, setCode] = useState('');
+  const [qt, setQt] = useState('1');
   const [loading, setLoading] = useState('');
 
   function codeToSixDigits() {
@@ -24,7 +25,7 @@ export default function FieldScreen() {
     const fixedCode = codeToSixDigits();
     if(Alert.alert(
       `Confirmação`,
-      `Código: ${fixedCode}`,
+      `Código: ${fixedCode}${+qt != 1 ? '. Qtd: '+qt : ''}`,
       [
         { text: 'Cancelar!', onPress: () => console.log('cancelado'), style: 'cancel',},
         { text: 'Ok!', onPress: () => saveStorage(fixedCode)}
@@ -36,18 +37,27 @@ export default function FieldScreen() {
     setLoading(true);
     try{
       const estoque = await AsyncStorage.getItem('estoque');
-      if(estoque === null){
-        console.log('estoque é null');
-        await AsyncStorage.setItem('estoque', `${fixedCode}\n`);
-        Keyboard.dismiss();
-        setCode('');
-        setLoading(false);
-      } else{
-        const novoEstoque = `${estoque}${fixedCode}\n`
-        await AsyncStorage.setItem('estoque', novoEstoque);
-        setCode('');
-        setLoading(false);
+      let novoEstoque = estoque || '';
+      if(+qt > 1) {
+        const codes = `${fixedCode}\n`.repeat(+qt);
+        novoEstoque = `${novoEstoque}${codes}`;
+      } else if (+qt !== 1) {
+        Alert.alert(
+          'Erro',
+          'Quantidade deve ser 1 ou mais',
+          [
+            { text: 'Fechar e ajustar...' }
+          ]
+        )
+        return;
+      } else { // qt == 1
+        novoEstoque = `${novoEstoque}${fixedCode}\n`;
       }
+      await AsyncStorage.setItem('estoque', novoEstoque);
+      Keyboard.dismiss();
+      setCode('');
+      setLoading(false);
+      setQt('1');
     }catch(err){
       console.log('ERRORRRR:', err)
     }
@@ -67,7 +77,17 @@ export default function FieldScreen() {
             keyboardType="number-pad"
             onChangeText={text => handleTextChange(text)}
           />
-          <TouchableOpacity style={styles.buttons} onPress={() => handleButtonClick()}>
+          <Text>  
+            Quantidade:
+          </Text>
+          <TextInput
+            style={{borderColor: 'black', borderWidth: 2, padding: 3, margin: 10, width: 100}}
+            value={qt}
+            maxLength={2}
+            keyboardType="number-pad"
+            onChangeText={val => setQt(val)}
+          />
+          <TouchableOpacity style={styles.buttons} onPress={handleButtonClick}>
             <Text style={styles.textButton}>Salvar código</Text>
           </TouchableOpacity>
         </View>
